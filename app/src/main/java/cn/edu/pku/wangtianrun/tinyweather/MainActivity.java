@@ -31,7 +31,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private static final int UPDATE_TODAY_WEATHER=1;
     private ImageView mUpdateBtn;
     private ImageView mCitySelect;
-    private TextView cityTv, timeTv, humidityTv, weekTv, pmDataTv, pmQualityTv, temperatureTv, climateTv, windTv, city_name_Tv;
+    private TextView cityTv, timeTv, wendutv,humidityTv, weekTv, pmDataTv, pmQualityTv, temperatureTv, climateTv, windTv, city_name_Tv;
     private ImageView weatherImg, pmImg;
 
     private Handler mHandler=new Handler(){
@@ -75,6 +75,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         pmQualityTv = (TextView) findViewById(R.id.pm2_5_quality);
         pmImg = (ImageView) findViewById(R.id.pm2_5_img);
         temperatureTv = (TextView) findViewById(R.id.temperature);
+        wendutv=(TextView) findViewById(R.id.wendu);
         climateTv = (TextView) findViewById(R.id.climate);
         windTv = (TextView) findViewById(R.id.wind);
         weatherImg = (ImageView) findViewById(R.id.weather_img);
@@ -86,6 +87,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         pmQualityTv.setText("N/A");
         weekTv.setText("N/A");
         temperatureTv.setText("N/A");
+        wendutv.setText("N/A");
         climateTv.setText("N/A");
         windTv.setText("N/A");
     }
@@ -97,8 +99,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             startActivityForResult(i,1);
         }
         if (view.getId() == R.id.title_update_btn) {
-            SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
-            String cityCode = sharedPreferences.getString("main_city_code", "101010100");
+            SharedPreferences sharedPreferences=getSharedPreferences("config",MODE_PRIVATE);
+            String cityCode=sharedPreferences.getString("main_city_code","101010100");
             Log.d("myWeather", cityCode);
 
             if (NetUtil.getNetworkState(this) != NetUtil.NETWORN_NONE) {
@@ -113,6 +115,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onActivityResult(int requestCode,int resultCode,Intent data){
         if(requestCode==1&&resultCode==RESULT_OK){
             String newCityCode=data.getStringExtra("cityCode");
+
+            //将选择的城市代码保存到SharedPreferences：
+            //在sharedpreference中创建新的键值对<selected_city_code，newCityCode>来保存选择的城市代码
+            //如果将选择的城市代码保存到"main_city_code"中，再次刷新时，城市仍为兰州。关闭虚拟机后重启时城市也是兰州。
+            SharedPreferences.Editor editor=getSharedPreferences("config",MODE_PRIVATE).edit();
+            editor.putString("selected_city_code",newCityCode);
+            editor.apply();
+            Log.d("myWeather","新的城市代码已经保存到SharedPreferrences中");
+            //
+
             Log.d("myWeather","选择的城市代码为"+newCityCode);
             if(NetUtil.getNetworkState(this)!=NetUtil.NETWORN_NONE){
                 Log.d("myWeather","网络OK");
@@ -266,8 +278,60 @@ public class MainActivity extends Activity implements View.OnClickListener {
         pmQualityTv.setText(todayWeather.getQuality());
         weekTv.setText(todayWeather.getDate());
         temperatureTv.setText(todayWeather.getHigh()+'~'+todayWeather.getLow());
+        wendutv.setText("当前温度:"+todayWeather.getWendu()+"℃");
         climateTv.setText(todayWeather.getType());
         windTv.setText("风力:"+todayWeather.getFengli());
+
+        //更新imageview
+        int pm2_5=Integer.parseInt(todayWeather.getPm25());
+        if(pm2_5<=50) pmImg.setImageResource(R.drawable.biz_plugin_weather_0_50);
+        if(pm2_5>50&&pm2_5<=100) pmImg.setImageResource(R.drawable.biz_plugin_weather_51_100);
+        if(pm2_5>100&&pm2_5<=150) pmImg.setImageResource(R.drawable.biz_plugin_weather_101_150);
+        if(pm2_5>150&&pm2_5<=200) pmImg.setImageResource(R.drawable.biz_plugin_weather_151_200);
+        if(pm2_5>200&&pm2_5<=300) pmImg.setImageResource(R.drawable.biz_plugin_weather_201_300);
+        if(pm2_5>300) pmImg.setImageResource(R.drawable.biz_plugin_weather_greater_300);
+
+        String climate=todayWeather.getType();
+        if(climate.equals("暴雪"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_baoxue);
+        if(climate.equals("暴雨"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_baoyu);
+        if(climate.equals("大暴雨"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_dabaoyu);
+        if(climate.equals("大雪"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_daxue);
+        if(climate.equals("大雨"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_dayu);
+        if(climate.equals("多云"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_duoyun);
+        if(climate.equals("雷阵雨"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_leizhenyu);
+        if(climate.equals("雷阵雨冰雹"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_leizhenyubingbao);
+        if(climate.equals("晴"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_qing);
+        if(climate.equals("沙尘暴"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_shachenbao);
+        if(climate.equals("特大暴雨"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_tedabaoyu);
+        if(climate.equals("雾"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_wu);
+        if(climate.equals("小雪"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_xiaoxue);
+        if(climate.equals("小雨"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_xiaoyu);
+        if(climate.equals("阴"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_yin);
+        if(climate.equals("雨夹雪"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_yujiaxue);
+        if(climate.equals("阵雨"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_zhenyu);
+        if(climate.equals("阵雪"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_zhenxue);
+        if(climate.equals("中雪"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_zhongxue);
+        if(climate.equals("中雨"))
+            weatherImg.setImageResource(R.drawable.biz_plugin_weather_zhongyu);
         Toast.makeText(MainActivity.this,"更新成功!",Toast.LENGTH_LONG).show();
     }
 }

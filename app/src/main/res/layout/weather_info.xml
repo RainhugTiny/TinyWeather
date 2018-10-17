@@ -201,6 +201,18 @@
                     android:text="-2℃~-7℃"
                     android:textColor="@android:color/white"
                     android:textSize="30.0sp"/>
+                <!--当前温度-->
+                <TextView
+                    android:id="@+id/wendu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/wind"
+                    android:layout_marginLeft="5dip"
+                    android:layout_toRightOf="@id/weather_img"
+                    android:singleLine="true"
+                    android:text="10℃"
+                    android:textColor="@android:color/white"
+                    android:textSize="30.0sp"/>
                 <!--天气状况-->
                 <TextView
                     android:id="@+id/climate"
