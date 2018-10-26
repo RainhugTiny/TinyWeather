@@ -13,13 +13,21 @@ public class CityDB {
     public static final String CITY_DB_NAME="city.db";
     private static final String CITY_TABLE_NAME="city";
     private SQLiteDatabase db;
-
+    /*
+    * 构造创建数据库的方法
+    * */
     public CityDB(Context context,String path){
         db=context.openOrCreateDatabase(path,Context.MODE_PRIVATE,null);
     }
+    /*
+    * 构造获得数据库中全部城市信息的方法
+    * */
     public List<City>getAllCity(){
+        //定义一个City类的列表来储存所有城市信息
         List<City> list=new ArrayList<City>();
+        //定义一个按行访问数据的光标
         Cursor c=db.rawQuery("SELECT * from " + CITY_TABLE_NAME,null);
+        //当下一行不为空时，光标循环读取每一行的数据
         while(c.moveToNext()){
             String province=c.getString(c.getColumnIndex("province"));
             String city=c.getString(c.getColumnIndex("city"));

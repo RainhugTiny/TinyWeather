@@ -33,7 +33,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private ImageView mCitySelect;
     private TextView cityTv, timeTv, wendutv,humidityTv, weekTv, pmDataTv, pmQualityTv, temperatureTv, climateTv, windTv, city_name_Tv;
     private ImageView weatherImg, pmImg;
-
+    /*
+    *主线程增加Handler，接收到消息数据后，调用updateTodayWeather方法，更新UI界面的数据
+    * */
     private Handler mHandler=new Handler(){
         public void handleMessage(android.os.Message msg){
             switch (msg.what){
@@ -48,11 +50,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //加载主界面布局
         setContentView(R.layout.weather_info);
-
         mUpdateBtn = (ImageView) findViewById(R.id.title_update_btn);
         mUpdateBtn.setOnClickListener(this);
-        //进行网络状态检测
+
+        /*进行网络状态检测。
+        *通过Toast在界面通知信息。
+        */
         if (NetUtil.getNetworkState(this) != NetUtil.NETWORN_NONE) {
             Log.d("myWeather", "网络OK");
             Toast.makeText(MainActivity.this, "网络OK！", Toast.LENGTH_LONG).show();
@@ -62,9 +67,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
         mCitySelect=(ImageView) findViewById(R.id.title_city_manager);
         mCitySelect.setOnClickListener(this);
+        //界面控件初始化
         initView();
     }
 
+    /*
+    * 定义初始化界面控件内容的方法
+    * */
     void initView() {
         city_name_Tv = (TextView) findViewById(R.id.title_city_name);
         cityTv = (TextView) findViewById(R.id.city);
@@ -92,19 +101,28 @@ public class MainActivity extends Activity implements View.OnClickListener {
         windTv.setText("N/A");
     }
 
+    /*
+     *添加单击事件
+     **/
     @Override
     public void onClick(View view) {
+        //为选择城市图标增加点击事件
         if(view.getId()==R.id.title_city_manager){
+            //创建Intent对象来在活动间传递信息，在MainActivity这个活动的基础上打开SelectCity这个活动活动
             Intent i=new Intent(this,SelectCity.class);
+            //SelectCity活动销毁后返回信息给MainActivity活动，请求码设置为1
             startActivityForResult(i,1);
         }
+        //为更新按钮增加点击事件
         if (view.getId() == R.id.title_update_btn) {
             SharedPreferences sharedPreferences=getSharedPreferences("config",MODE_PRIVATE);
+            //通过SharedPreferences读取城市id，如果没有定义则缺省为101010100
             String cityCode=sharedPreferences.getString("main_city_code","101010100");
             Log.d("myWeather", cityCode);
 
             if (NetUtil.getNetworkState(this) != NetUtil.NETWORN_NONE) {
                 Log.d("myWeather", "网络OK");
+                //获取网络数据
                 queryWeatherCode(cityCode);
             } else {
                 Log.d("myWeather", "网络挂了");
@@ -112,19 +130,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         }
     }
+    /*
+    *定义onActivityResult方法接收返回SelectCity活动撤销时返回的数据
+    * */
     protected void onActivityResult(int requestCode,int resultCode,Intent data){
+        //请求码（requestCode）为startActivityForResult中的请求码，返回码为setResult中的返回码）
         if(requestCode==1&&resultCode==RESULT_OK){
             String newCityCode=data.getStringExtra("cityCode");
-
-            //将选择的城市代码保存到SharedPreferences：
-            //在sharedpreference中创建新的键值对<selected_city_code，newCityCode>来保存选择的城市代码
-            //如果将选择的城市代码保存到"main_city_code"中，再次刷新时，城市仍为兰州。关闭虚拟机后重启时城市也是兰州。
+            //将SharedPreferences中保存的城市id修改为在选择城市界面选择的城市id。
             SharedPreferences.Editor editor=getSharedPreferences("config",MODE_PRIVATE).edit();
-            editor.putString("selected_city_code",newCityCode);
+            editor.putString("main_city_code",newCityCode);
             editor.apply();
             Log.d("myWeather","新的城市代码已经保存到SharedPreferrences中");
-            //
-
             Log.d("myWeather","选择的城市代码为"+newCityCode);
             if(NetUtil.getNetworkState(this)!=NetUtil.NETWORN_NONE){
                 Log.d("myWeather","网络OK");
@@ -137,24 +154,30 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
 
     }
-
-    /**
-     * @param cityCode
-     */
+    /*
+    *定义获取网络数据方法
+    * */
     private void queryWeatherCode(String cityCode) {
+        //定义所选城市天气信息的URL地址
         final String address = "http://wthrcdn.etouch.cn/WeatherApi?citykey=" + cityCode;
         Log.d("myWeather", address);
         new Thread(new Runnable() {
             @Override
             public void run() {
+                //HttpURLConnection继承自URLConnection
                 HttpURLConnection con = null;
                 TodayWeather todayWeather=null;
                 try {
                     URL url = new URL(address);
+                    //通过URL地址打开链接
                     con = (HttpURLConnection) url.openConnection();
+                    //请求方式为获取数据
                     con.setRequestMethod("GET");
+                    //设置超时时间8000毫秒
                     con.setConnectTimeout(8000);
+                    //设置读取超时8000毫秒
                     con.setReadTimeout(8000);
+                    //得到网络返回的输入流
                     InputStream in = con.getInputStream();
                     BufferedReader reader = new BufferedReader(new InputStreamReader(in));
                     StringBuilder response = new StringBuilder();
@@ -165,10 +188,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     }
                     String responseStr = response.toString();
                     Log.d("myWeather", responseStr);
+                    //将解析的数据保存到todayweather对象中
                     todayWeather=parseXML(responseStr);
                     if(todayWeather!=null){
                         Log.d("myWeather",todayWeather.toString());
-
+                        //通过消息机制，将解析的天气对象，通过消息发送给主线程
                         Message msg=new Message();
                         msg.what=UPDATE_TODAY_WEATHER;
                         msg.obj=todayWeather;
@@ -185,6 +209,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }).start();
     }
 
+    /*
+    * 定义解析xml数据方法
+    * */
     private TodayWeather parseXML(String xmldata) {
         TodayWeather todayWeather = null;
         int fengxiangCount = 0;
@@ -269,28 +296,37 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
         return todayWeather;
     }
+
+    /*
+    * 定义更新UI控件的方法
+    * */
     void updateTodayweather(TodayWeather todayWeather){
         city_name_Tv.setText(todayWeather.getCity()+"天气");
         cityTv.setText(todayWeather.getCity());
         timeTv.setText(todayWeather.getUpdatetime()+"发布");
         humidityTv.setText("湿度:"+todayWeather.getShidu());
-        pmDataTv.setText(todayWeather.getPm25());
-        pmQualityTv.setText(todayWeather.getQuality());
+        if(todayWeather.getPm25()!=null) pmDataTv.setText(todayWeather.getPm25());
+        else pmDataTv.setText("无");
+        if(todayWeather.getQuality()!=null) pmQualityTv.setText(todayWeather.getQuality());
+        else pmQualityTv.setText("无");
         weekTv.setText(todayWeather.getDate());
         temperatureTv.setText(todayWeather.getHigh()+'~'+todayWeather.getLow());
         wendutv.setText("当前温度:"+todayWeather.getWendu()+"℃");
         climateTv.setText(todayWeather.getType());
         windTv.setText("风力:"+todayWeather.getFengli());
 
-        //更新imageview
-        int pm2_5=Integer.parseInt(todayWeather.getPm25());
-        if(pm2_5<=50) pmImg.setImageResource(R.drawable.biz_plugin_weather_0_50);
-        if(pm2_5>50&&pm2_5<=100) pmImg.setImageResource(R.drawable.biz_plugin_weather_51_100);
-        if(pm2_5>100&&pm2_5<=150) pmImg.setImageResource(R.drawable.biz_plugin_weather_101_150);
-        if(pm2_5>150&&pm2_5<=200) pmImg.setImageResource(R.drawable.biz_plugin_weather_151_200);
-        if(pm2_5>200&&pm2_5<=300) pmImg.setImageResource(R.drawable.biz_plugin_weather_201_300);
-        if(pm2_5>300) pmImg.setImageResource(R.drawable.biz_plugin_weather_greater_300);
+        //根据解析的PM2.5的值更新PM2.5的图案
+        if(todayWeather.getPm25()!=null){
+            int pm2_5=Integer.parseInt(todayWeather.getPm25());
+            if(pm2_5<=50) pmImg.setImageResource(R.drawable.biz_plugin_weather_0_50);
+            if(pm2_5>50&&pm2_5<=100) pmImg.setImageResource(R.drawable.biz_plugin_weather_51_100);
+            if(pm2_5>100&&pm2_5<=150) pmImg.setImageResource(R.drawable.biz_plugin_weather_101_150);
+            if(pm2_5>150&&pm2_5<=200) pmImg.setImageResource(R.drawable.biz_plugin_weather_151_200);
+            if(pm2_5>200&&pm2_5<=300) pmImg.setImageResource(R.drawable.biz_plugin_weather_201_300);
+            if(pm2_5>300) pmImg.setImageResource(R.drawable.biz_plugin_weather_greater_300);
+        }
 
+        //根据解析的天气类型更新界面的天气图案
         String climate=todayWeather.getType();
         if(climate.equals("暴雪"))
             weatherImg.setImageResource(R.drawable.biz_plugin_weather_baoxue);

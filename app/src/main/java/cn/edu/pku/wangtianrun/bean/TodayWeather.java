@@ -1,5 +1,7 @@
 package cn.edu.pku.wangtianrun.bean;
-
+/*
+* 定义今日天气类，用来保存所选城市的全部所需信息
+* */
 public class TodayWeather {
     private String city;
     private String updatetime;
@@ -14,6 +16,9 @@ public class TodayWeather {
     private String low;
     private String type;
 
+    /*
+    * 定义获取类中数据的方法
+    * */
     public String getCity(){
         return city;
     }
@@ -50,6 +55,9 @@ public class TodayWeather {
     public  String getType(){
         return type;
     }
+    /*
+    * 定义初始化类中数据的方法
+    * */
     public void setCity(String city){
         this.city=city;
     }

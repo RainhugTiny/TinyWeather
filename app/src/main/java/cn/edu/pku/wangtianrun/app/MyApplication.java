@@ -24,11 +24,17 @@ public class MyApplication extends Application {
         super.onCreate();
         Log.d(TAG,"MyApplication->Oncreate");
         myApplication=this;
+        //打开数据库
         mCityDB=openCityDB();
+        //初始化城市列表
         initCityList();
     }
+    /*
+    * 构造初始化城市列表方法
+    * */
     private void initCityList(){
         mCityList = new ArrayList<City>();
+        //新建子线程准备城市列表
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -37,7 +43,11 @@ public class MyApplication extends Application {
             }
         }).start();
     }
+    /*
+    * 构建准备城市列表的方法
+    * */
     private boolean prepareCityList() {
+        //获取mCityDB对象中的全部城市信息
         mCityList = mCityDB.getAllCity();
         int i=0;
         for (City city : mCityList) {
@@ -49,13 +59,23 @@ public class MyApplication extends Application {
         Log.d(TAG,"i="+i);
         return true;
     }
+    /*
+    * 构建获取城市列表的方法
+    * */
     public List<City> getCityList() {
         return mCityList;
     }
+    /*
+    * 构建getInstance方法
+    * */
     public static MyApplication getInstance(){
         return myApplication;
     }
+    /*
+    *构造打开数据库的方法
+    * */
     private CityDB openCityDB() {
+        //数据库文件的路径
         String path = "/data"
                 + Environment.getDataDirectory().getAbsolutePath ()
                 + File.separator + getPackageName()
@@ -64,6 +84,7 @@ public class MyApplication extends Application {
                 + CityDB.CITY_DB_NAME;
         File db = new File(path);
         Log.d(TAG,path);
+        //如果数据库文件不存在，寻找文件夹是否存在
         if (!db.exists()) {
             String pathfolder = "/data"
                     + Environment.getDataDirectory().getAbsolutePath()
@@ -71,13 +92,17 @@ public class MyApplication extends Application {
                     + File.separator + "databases1"
                     + File.separator;
             File dirFirstFolder = new File(pathfolder);
+            //如果文件夹不存在，则新建文件夹
             if(!dirFirstFolder.exists()){
                 dirFirstFolder.mkdirs();
                 Log.i("MyApp","mkdirs");
             }
             Log.i("MyApp","db is not exists");
+            //异常处理
             try {
+                //从city.db中读取数据
                 InputStream is = getAssets().open("city.db");
+                //将数据写入db中
                 FileOutputStream fos = new FileOutputStream(db);
                 int len = -1;
                 byte[] buffer = new byte[1024];
@@ -87,7 +112,9 @@ public class MyApplication extends Application {
                 }
                 fos.close();
                 is.close();
-            } catch (IOException e) {
+            }
+            //捕获异常
+            catch (IOException e) {
                 e.printStackTrace();
                 System.exit(0);
             }
