@@ -9,6 +9,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private ImageView mCitySelect;
     private TextView cityTv, timeTv, wendutv,humidityTv, weekTv, pmDataTv, pmQualityTv, temperatureTv, climateTv, windTv, city_name_Tv;
     private ImageView weatherImg, pmImg;
+    private ProgressBar progressBar;
     /*
     *主线程增加Handler，接收到消息数据后，调用updateTodayWeather方法，更新UI界面的数据
     * */
@@ -54,6 +56,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.weather_info);
         mUpdateBtn = (ImageView) findViewById(R.id.title_update_btn);
         mUpdateBtn.setOnClickListener(this);
+        progressBar=(ProgressBar)findViewById(R.id.title_update_progress);
 
         /*进行网络状态检测。
         *通过Toast在界面通知信息。
@@ -119,6 +122,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
         //为更新按钮增加点击事件
         if (view.getId() == R.id.title_update_btn) {
+            progressBar.setVisibility(View.VISIBLE);
+            mUpdateBtn.setVisibility(View.INVISIBLE);
+
             SharedPreferences sharedPreferences=getSharedPreferences("config",MODE_PRIVATE);
             //通过SharedPreferences读取城市id，如果没有定义则缺省为101010100
             String cityCode=sharedPreferences.getString("main_city_code","101010100");
@@ -373,6 +379,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if(climate.equals("中雨"))
             weatherImg.setImageResource(R.drawable.biz_plugin_weather_zhongyu);
         Toast.makeText(MainActivity.this,"更新成功!",Toast.LENGTH_LONG).show();
+        progressBar.setVisibility(View.INVISIBLE);
+        mUpdateBtn.setVisibility(View.VISIBLE);
     }
 }
 

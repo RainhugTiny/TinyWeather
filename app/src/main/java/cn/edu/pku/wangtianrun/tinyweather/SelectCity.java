@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -32,12 +33,13 @@ public class SelectCity extends Activity implements View.OnClickListener{
     private EditText mEditText;
     private ArrayAdapter<String> adapter;
     private ProgressBar progressBar;
+    private TextView mtextView;
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         //在选择城市界面中加载布局
         setContentView(R.layout.select_city);
-
+        mtextView=(TextView)findViewById(R.id.title_name);
         MyApplication myApplication=(MyApplication) getApplication();
         //获得城市列表
         cityList=myApplication.getCityList();
@@ -52,6 +54,7 @@ public class SelectCity extends Activity implements View.OnClickListener{
                 break;
             }
         }
+        mtextView.setText("当前城市："+selected_city.getCity());
 
         initListViews();
         mBackBtn=(ImageView) findViewById(R.id.title_back);
