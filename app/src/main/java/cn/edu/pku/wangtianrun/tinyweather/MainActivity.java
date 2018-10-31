@@ -110,6 +110,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if(view.getId()==R.id.title_city_manager){
             //创建Intent对象来在活动间传递信息，在MainActivity这个活动的基础上打开SelectCity这个活动活动
             Intent i=new Intent(this,SelectCity.class);
+            //将城市信息传递给SelectCity中的活动
+            SharedPreferences sharedPreferences=getSharedPreferences("config",MODE_PRIVATE);
+            String citycode=sharedPreferences.getString("main_city_code","101010100");
+            i.putExtra("initCityCode",citycode);
             //SelectCity活动销毁后返回信息给MainActivity活动，请求码设置为1
             startActivityForResult(i,1);
         }
