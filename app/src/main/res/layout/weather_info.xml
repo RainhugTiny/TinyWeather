@@ -42,6 +42,15 @@
             android:layout_gravity="center"
             android:src="@drawable/title_update"
             android:visibility="visible" />
+        <ProgressBar
+            android:id="@+id/title_update_progress"
+            android:layout_width="45.0dip"
+            android:layout_height="45.0dip"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:indeterminateDrawable="@drawable/progressbar"
+            android:visibility="invisible"/>
         <!-- 分享图标 -->
         <ImageView
             android:id="@+id/title_share"
@@ -56,13 +65,21 @@
             android:layout_height="45.0dip"
             android:layout_toLeftOf="@id/title_share"
             android:src="@drawable/base_action_bar_action_city" />
+        <ProgressBar
+            android:id="@+id/title_location_progress"
+            android:layout_width="45.0dip"
+            android:layout_height="45.0dip"
+            android:layout_toLeftOf="@id/title_share"
+            android:indeterminate="true"
+            android:indeterminateDrawable="@drawable/progressbar"
+            android:visibility="invisible"/>
     </RelativeLayout>
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_below="@id/title"
-        android:background="@drawable/biz_plugin_weather_shenzhen_bg3"
+        android:background="@drawable/biz_plugin_weather_shenzhen_bg"
         android:orientation="vertical">
         <!-- 今日天气信息 -->
         <RelativeLayout
@@ -217,7 +234,7 @@
                     android:singleLine="true"
                     android:text="10℃"
                     android:textColor="@android:color/white"
-                    android:textSize="30.0sp"/>
+                    android:textSize="20.0sp"/>
                 <!--天气状况-->
                 <TextView
                     android:id="@+id/climate"
@@ -245,16 +262,14 @@
             </RelativeLayout>
         </RelativeLayout>
 
+        <android.support.v4.view.ViewPager
+            android:id="@+id/vpager"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+        </android.support.v4.view.ViewPager>
+
     </LinearLayout>
-    <ProgressBar
-        android:id="@+id/title_update_progress"
-        android:layout_width="45.0dip"
-        android:layout_height="45.0dip"
-        android:layout_alignParentRight="true"
-        android:layout_gravity="center"
-        android:indeterminate="true"
-        android:indeterminateDrawable="@drawable/progressbar"
-        android:visibility="invisible"/>
 
 
 </RelativeLayout>
