@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +36,7 @@ import cn.edu.pku.wangtianrun.bean.TodayWeather;
 import cn.edu.pku.wangtianrun.util.NetUtil;
 import cn.edu.pku.wangtianrun.viewpager.MypagerAdapter;
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends Activity implements View.OnClickListener,ViewPager.OnPageChangeListener {
     private static final int UPDATE_TODAY_WEATHER=1;
     private static final int DB=2;
     private ImageView mUpdateBtn;
@@ -50,6 +51,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private ViewPager vpager;
     private ArrayList<View> aList;
     private MypagerAdapter mAdapter;
+    private LinearLayout mLinearLayout;
+    private int mNub=0;
     /*
     *主线程增加Handler，接收到消息数据后，调用updateTodayWeather方法，更新UI界面的数据
     * */
@@ -69,17 +72,38 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         //加载主界面布局
         setContentView(R.layout.weather_info);
+        //初始化展示未来四天天气的界面
         initViewPager();
+        mLinearLayout=(LinearLayout)findViewById(R.id.main_linear);
+        //初始化展示未来四天天气界面的小圆点
+        initDot();
+        //为未来四天天气界面设置页面滑动监听事件
+        vpager.addOnPageChangeListener(this);
+        //设置当前页面的小圆点可见
+        mLinearLayout.getChildAt(0).setEnabled(true);
         mTitleLocation=(ImageView)findViewById(R.id.title_location);
+        //为定位按钮设置监听事件
         mTitleLocation.setOnClickListener(this);
         mUpdateBtn = (ImageView) findViewById(R.id.title_update_btn);
+        //为更新按钮设置监听事件
         mUpdateBtn.setOnClickListener(this);
+        //为更新按钮设置进度条
         progressBar=(ProgressBar)findViewById(R.id.title_update_progress);
+        //为定位按钮设置进度条
         progressBar_location=(ProgressBar)findViewById(R.id.title_location_progress);
-
+        mCitySelect=(ImageView) findViewById(R.id.title_city_manager);
+        //为选择城市按钮设置监听事件
+        mCitySelect.setOnClickListener(this);
+        mLocationClient=new LocationClient(getApplicationContext());
+        //注册监听函数
+        mLocationClient.registerLocationListener(myListener);
+        //初始化定位配置信息
+        initLocation();
+        //界面控件初始化
+        initView();
         /*进行网络状态检测。
-        *通过Toast在界面通知信息。
-        */
+         *通过Toast在界面通知信息。
+         */
         if (NetUtil.getNetworkState(this) != NetUtil.NETWORN_NONE) {
             Log.d("myWeather", "网络OK");
             Toast.makeText(MainActivity.this, "网络OK！", Toast.LENGTH_LONG).show();
@@ -87,21 +111,40 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Log.d("myWeather", "网络挂了");
             Toast.makeText(MainActivity.this, "网络挂了!", Toast.LENGTH_LONG).show();
         }
-        mCitySelect=(ImageView) findViewById(R.id.title_city_manager);
-        mCitySelect.setOnClickListener(this);
-        mLocationClient=new LocationClient(getApplicationContext());
-        //注册监听函数
-        mLocationClient.registerLocationListener(myListener);
-        initLocation();
-        //界面控件初始化
-        initView();
     }
+    /*
+    * 构造初始化小圆点方法
+    * */
+    private void initDot(){
+        View view;
+        for(int i=0;i<2;i++){
+            view=new View(MainActivity.this);
+            //加载自定义的布局
+            view.setBackgroundResource(R.drawable.background);
+            //设置小圆点为未选中样式
+            view.setEnabled(false);
+            //设置布局参数
+            LinearLayout.LayoutParams layoutParams=new LinearLayout.LayoutParams(30,30);
+            if(i!=0){
+                //设置小圆点的间距
+                layoutParams.leftMargin=10;
+            }
+            //在布局中添加元素
+            mLinearLayout.addView(view,layoutParams);
+        }
+    }
+    /*
+    * 构造初始化未来四天天气界面方法
+    * */
     private void initViewPager(){
         vpager=(ViewPager)findViewById(R.id.vpager);
         aList=new ArrayList<View>();
+        //使用LayoutInflater来载入需要动态载入的界面
         LayoutInflater Li=getLayoutInflater();
+        //在aList中添加布局
         aList.add(Li.inflate(R.layout.view_one,null,false));
         aList.add(Li.inflate(R.layout.view_two,null,false));
+        //获得已经载入界面中的控件元素
         weekTv1 = (TextView)aList.get(0).findViewById(R.id.viewone_week_today1);
         temperatureTv1= (TextView)aList.get(0).findViewById(R.id.viewone_temperature1);
         windTv1 = (TextView) aList.get(0).findViewById(R.id.viewone_wind1);
@@ -125,6 +168,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mAdapter=new MypagerAdapter(aList);
         vpager.setAdapter(mAdapter);
     }
+    /*
+    * 构造初始化位置信息方法
+    * */
     private void initLocation(){
         LocationClientOption option=new LocationClientOption();
         option.setIsNeedAddress(true);
@@ -157,6 +203,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         climateTv = (TextView) findViewById(R.id.climate);
         windTv = (TextView) findViewById(R.id.wind);
         weatherImg = (ImageView) findViewById(R.id.weather_img);
+        //初始状态下信息为空
         city_name_Tv.setText("N/A");
         cityTv.setText("N/A");
         timeTv.setText("N/A");
@@ -221,9 +268,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 Toast.makeText(MainActivity.this, "网络挂了!", Toast.LENGTH_LONG).show();
             }
         }
+        //为定位按钮设置单击事件
         if(view.getId()==R.id.title_location){
+            //设置进度条可见
             progressBar_location.setVisibility(View.VISIBLE);
+            //设置定位图标不可见
             mTitleLocation.setVisibility(View.INVISIBLE);
+            //若定位已启动，则停止重新启动定位
             if(mLocationClient.isStarted()){
                 mLocationClient.stop();
             }
@@ -235,6 +286,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             if(msg.obj!=null){
                                 if(NetUtil.getNetworkState(MainActivity.this)!=NetUtil.NETWORN_NONE){
                                     Log.d("myWeather","网络OK");
+                                    //查询城市天气信息并更新
                                     queryWeatherCode((String) msg.obj);
                                 }else {
                                     Log.d("myWeather","网络挂了");
@@ -248,7 +300,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     }
                 }
             };
-
+            //设置线程获得定位城市信息，并传递信息给Handler
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -257,7 +309,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             Thread.sleep(2000);
                         }
                         Message msg=new Message();
+                        //设置标记
                         msg.what=DB;
+                        //设置传递信息的内容
                         msg.obj=myListener.cityCode;
                         BDHandler.sendMessage(msg);
                     }catch (Exception e){
@@ -545,6 +599,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         progressBar_location.setVisibility(View.INVISIBLE);
         mTitleLocation.setVisibility(View.VISIBLE);
     }
+    /*
+    * 构造更新图片方法
+    * */
     private void updateImage(ImageView weatherImg,String climate){
         if(climate.equals("暴雪"))
             weatherImg.setImageResource(R.drawable.biz_plugin_weather_baoxue);
@@ -586,6 +643,28 @@ public class MainActivity extends Activity implements View.OnClickListener {
             weatherImg.setImageResource(R.drawable.biz_plugin_weather_zhongxue);
         if(climate.equals("中雨"))
             weatherImg.setImageResource(R.drawable.biz_plugin_weather_zhongyu);
+    }
+    /*
+    * 为未来四天天气界面的小圆点设置滑动事件
+    * */
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        //过去选中的页面小圆点不可见
+        mLinearLayout.getChildAt(mNub).setEnabled(false);
+        //当前选中页面的小圆点可见
+        mLinearLayout.getChildAt(position).setEnabled(true);
+        //记录当前位置
+        mNub=position;
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
     }
 }
 

@@ -38,7 +38,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/title_selectCity"
-        android:hint="搜索全国城市（中文）"
+        android:hint="搜索全国城市（中文/拼音）"
         android:layout_margin="10dip"
         android:drawableLeft="@drawable/magnifying_glass"
         android:drawablePadding="8dp"
@@ -52,9 +52,9 @@
         android:textColorHint="#ffcccccc"
         android:textSize="15sp"
         />
-    <RelativeLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_below="@id/search_edit">
         <ListView
             android:id="@+id/title_list"
@@ -62,8 +62,13 @@
             android:layout_height="wrap_content"
             android:background="#ffffffff">
         </ListView>
+        <cn.edu.pku.wangtianrun.mlayout.LettersView
+            android:id="@+id/title_letters_view"
+            android:layout_width="30dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right"/>
 
-    </RelativeLayout>
+    </FrameLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
